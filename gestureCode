@@ -1,0 +1,265 @@
+#include <Wire.h>
+#include <SparkFun_APDS9960.h>
+#define APDS9960_INT 2 // Needs to be an interrupt pin
+
+SparkFun_APDS9960 apds = SparkFun_APDS9960();
+int isr_flag = 0;
+
+int led1 = 8;
+int led2 = 3;
+int led3 = 4;
+int led4 = 5;
+int led5 = 6;
+int led6 = 7;
+int roll = 0;
+int outcome = 0;
+
+void setup() {
+// put your setup code here, to run once:
+Serial.begin(9600);
+
+pinMode(APDS9960_INT, INPUT);
+
+pinMode(led1, OUTPUT);
+pinMode(led2, OUTPUT);
+pinMode(led3, OUTPUT);
+pinMode(led4, OUTPUT);
+pinMode(led5, OUTPUT);
+pinMode(led6, OUTPUT);
+
+Serial.println();
+Serial.println(F("--------------------------------"));
+Serial.println(F("SparkFun APDS-9960 - GestureTest"));
+Serial.println(F("--------------------------------"));
+
+// Initialize interrupt service routine
+attachInterrupt(0, interruptRoutine, FALLING);
+
+// Initialize APDS-9960 (configure I2C and initial values)
+if ( apds.init() )
+{
+Serial.println(F("APDS-9960 initialization complete"));
+}
+else
+{
+Serial.println(F("Something went wrong during APDS-9960 init!"));
+}
+
+// Start running the APDS-9960 gesture sensor engine
+if ( apds.enableGestureSensor(true) )
+{
+Serial.println(F("Gesture sensor is now running"));
+}
+else
+{
+Serial.println(F("Something went wrong during gesture sensor init!"));
+}
+}
+
+void loop() {
+if( isr_flag == 1 )
+{
+detachInterrupt(0);
+handleGesture();
+isr_flag = 0;
+attachInterrupt(0, interruptRoutine, FALLING);
+}
+
+if(outcome == 1)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, HIGH);
+digitalWrite(led4, HIGH);
+digitalWrite(led5, HIGH);
+digitalWrite(led6, HIGH);
+
+delay(200);
+
+digitalWrite(led1, LOW);
+digitalWrite(led2, LOW);
+digitalWrite(led3, LOW);
+digitalWrite(led4, LOW);
+digitalWrite(led5, LOW);
+digitalWrite(led6, LOW);
+
+delay(200);
+
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, HIGH);
+digitalWrite(led4, HIGH);
+digitalWrite(led5, HIGH);
+digitalWrite(led6, HIGH);
+
+delay(200);
+
+digitalWrite(led1, LOW);
+digitalWrite(led2, LOW);
+digitalWrite(led3, LOW);
+digitalWrite(led4, LOW);
+digitalWrite(led5, LOW);
+digitalWrite(led6, LOW);
+outcome = 0;
+}
+
+if(outcome == 2)
+{
+if(roll == 1)
+{
+digitalWrite(led1, LOW);
+}
+else if(roll == 2)
+{
+digitalWrite(led2, LOW);
+delay (200);
+digitalWrite(led1, LOW);
+}
+else if(roll == 3)
+{
+digitalWrite(led3, LOW);
+delay(200);
+digitalWrite(led2, LOW);
+delay(200);
+digitalWrite(led1, LOW);
+}
+else if(roll == 4)
+{
+digitalWrite(led4, LOW);
+delay(200);
+digitalWrite(led3, LOW);
+delay(200);
+digitalWrite(led2, LOW);
+delay(200);
+digitalWrite(led1, LOW);
+}
+else if(roll == 5)
+{
+digitalWrite(led5, LOW);
+delay(200);
+digitalWrite(led4, LOW);
+delay(200);
+digitalWrite(led3, LOW);
+delay(200);
+digitalWrite(led2, LOW);
+delay(200);
+digitalWrite(led1, LOW);
+}
+else if(roll ==6)
+{
+digitalWrite(led6, LOW);
+delay(200);
+digitalWrite(led5, LOW);
+delay(200);
+digitalWrite(led4, LOW);
+delay(200);
+digitalWrite(led3, LOW);
+delay(200);
+digitalWrite(led2, LOW);
+delay(200);
+digitalWrite(led1, LOW);
+}
+else
+{
+digitalWrite(led6, LOW);
+digitalWrite(led5, LOW);
+digitalWrite(led4, LOW);
+digitalWrite(led3, LOW);
+digitalWrite(led2, LOW);
+digitalWrite(led1, LOW);
+}
+}
+
+if(outcome == 3)
+{
+roll = random(1,7);
+Serial.println(roll);
+outcome = 0;
+if(roll == 1)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, LOW);
+digitalWrite(led3, LOW);
+digitalWrite(led4, LOW);
+digitalWrite(led5, LOW);
+digitalWrite(led6, LOW);
+
+}
+else if(roll == 2)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, LOW);
+digitalWrite(led4, LOW);
+digitalWrite(led5, LOW);
+digitalWrite(led6, LOW);
+}
+else if(roll == 3)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, HIGH);
+digitalWrite(led4, LOW);
+digitalWrite(led5, LOW);
+digitalWrite(led6, LOW);
+}
+else if(roll == 4)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, HIGH);
+digitalWrite(led4, HIGH);
+digitalWrite(led5, LOW);
+digitalWrite(led6, LOW);
+}
+else if(roll == 5)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, HIGH);
+digitalWrite(led4, HIGH);
+digitalWrite(led5, HIGH);
+digitalWrite(led6, LOW);
+}
+else if(roll == 6)
+{
+digitalWrite(led1, HIGH);
+digitalWrite(led2, HIGH);
+digitalWrite(led3, HIGH);
+digitalWrite(led4, HIGH);
+digitalWrite(led5, HIGH);
+digitalWrite(led6, HIGH);
+}
+
+}
+
+}
+
+void interruptRoutine() {
+isr_flag = 1;
+}
+
+void handleGesture() {
+if ( apds.isGestureAvailable() ) {
+switch ( apds.readGesture() ) {
+case DIR_UP:
+Serial.println("UP");
+outcome = 1;
+break;
+case DIR_DOWN:
+Serial.println("DOWN");
+outcome = 2;
+break;
+case DIR_LEFT:
+Serial.println("LEFT");
+outcome = 3;
+break;
+case DIR_RIGHT:
+Serial.println("RIGHT");
+outcome = 3;
+break;
+default:
+Serial.println("NONE");
+}
+}
+}
